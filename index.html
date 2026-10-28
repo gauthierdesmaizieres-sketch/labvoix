@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a6">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<title>LabVoix</title>
+<style>
+  :root { --bg:#f6f6f4; --fg:#111; --muted:#666; --card:#fff; --accent:#0a6; --rec:#c22; --line:#ddd; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#111; --fg:#eee; --muted:#999; --card:#1c1c1c; --accent:#3c9; --rec:#f55; --line:#333; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:18px/1.4 system-ui, sans-serif; }
+  main { max-width:760px; margin:0 auto; padding:16px; }
+  h1 { font-size:20px; margin:0 0 8px; }
+  textarea { width:100%; min-height:40vh; font:16px/1.4 ui-monospace, monospace; padding:10px; background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:8px; }
+  button, select { font:inherit; padding:14px 16px; border-radius:10px; border:1px solid var(--line); background:var(--card); color:var(--fg); min-height:56px; }
+  select { padding:6px 8px; min-height:40px; font-size:15px; }
+  button.primary { background:var(--accent); color:#fff; border:0; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0; }
+  .row button { flex:1 1 0; }
+  #status { display:flex; gap:8px; align-items:center; font-size:14px; color:var(--muted); flex-wrap:wrap; }
+  .badge { padding:2px 8px; border-radius:99px; border:1px solid var(--line); }
+  .badge:empty { display:none; }
+  .badge.cloud { border-color:#c80; color:#c80; }
+  .badge.local { border-color:var(--accent); color:var(--accent); }
+  #zone { background:var(--card); border:3px solid var(--line); border-radius:14px; padding:18px; min-height:42vh; display:flex; flex-direction:column; justify-content:center; cursor:pointer; user-select:none; }
+  #zone.listening { border-color:var(--rec); }
+  #stepNum { font-size:15px; color:var(--muted); }
+  #stepText { font-size:clamp(22px, 5vw, 32px); font-weight:600; margin:6px 0; }
+  #heard { font-size:15px; color:var(--muted); min-height:1.4em; }
+  #timer { font-size:28px; font-variant-numeric:tabular-nums; color:var(--rec); }
+  #log { list-style:none; padding:0; margin:0; font-size:15px; }
+  #log li { padding:6px 0; border-bottom:1px solid var(--line); }
+  #log time { color:var(--muted); font-variant-numeric:tabular-nums; margin-right:6px; }
+  .hint { font-size:14px; color:var(--muted); }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<main>
+  <section id="setup">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <h1 data-t="h1"></h1>
+      <select id="lang" aria-label="Langue / Sprache"><option value="fr">Français</option><option value="de">Deutsch</option></select>
+    </div>
+    <p class="hint" data-t="pasteHint"></p>
+    <textarea id="proto"></textarea>
+    <div class="row"><button class="primary" id="start" data-t="start"></button></div>
+    <p class="hint" data-t="cmdHint"></p>
+  </section>
+
+  <section id="run" hidden>
+    <div id="status">
+      <span id="title"></span>
+      <span class="badge" id="mode"></span>
+      <select id="listenMode" aria-label="Activation">
+        <option value="ptt" data-t="ptt"></option>
+        <option value="wake" data-t="wakeOpt"></option>
+        <option value="continuous" data-t="contOpt"></option>
+      </select>
+    </div>
+    <div id="zone" role="button" tabindex="0">
+      <div id="stepNum"></div>
+      <div id="stepText"></div>
+      <div id="timer"></div>
+      <div id="heard"></div>
+    </div>
+    <div class="row">
+      <button id="prev" data-t="prevBtn"></button>
+      <button id="again" data-t="againBtn"></button>
+      <button id="next" data-t="nextBtn"></button>
+    </div>
+    <div class="row">
+      <button id="share" data-t="share"></button>
+      <button id="copy" data-t="copy"></button>
+      <button id="csv" data-t="csv"></button>
+      <button id="edit" data-t="edit"></button>
+      <button id="clear" data-t="clear"></button>
+    </div>
+    <ul id="log"></ul>
+  </section>
+</main>
+
+<script>
+// --- Texts and voice commands per language ---
+const L = {
+  fr: {
+    speech: 'fr-FR', wake: 'labo',
+    h1: 'LabVoix — protocole mains libres',
+    pasteHint: 'Collez le protocole : 1ʳᵉ ligne = titre / n° de lot, puis une étape par ligne.',
+    start: 'Démarrer',
+    cmdHint: 'Commandes : « suivant », « précédent », « répète », « note … », « minuteur 10 minutes ». Toute autre phrase est notée telle quelle. Mode mot d\'activation : commencer par « Labo, … ».',
+    ptt: 'Toucher pour parler', wakeOpt: 'Mot « Labo »', contOpt: 'Écoute continue',
+    prevBtn: '◀ Précédent', againBtn: '↻ Répète', nextBtn: 'Suivant ▶',
+    share: 'Partager / OneNote', copy: 'Copier', csv: 'Tableau CSV', edit: 'Protocole', clear: 'Effacer journal',
+    f_time: 'Heure', f_note: 'Note', f_masse: 'Masse', f_volume: 'Volume', f_quantite: 'Quantité', f_temperature: 'Température', f_duree: 'Durée', f_pression: 'Pression', f_pH: 'pH',
+    zone: 'Toucher pour parler', idle: 'Touchez l\'écran (ou le bouton du casque) puis parlez.', idleWake: 'Dites « Labo, … » suivi de la commande.',
+    listening: 'J\'écoute…', step: 'Étape', of: '/', noted: 'Noté.', timerOn: 'Minuteur lancé.', timerEnd: 'Minuteur terminé.',
+    logTimerOn: 'minuteur lancé', logTimerEnd: 'minuteur terminé', noSteps: '(aucune étape)',
+    recLocal: 'reco : locale', recCloud: 'reco : cloud (audio → Google)', recNone: 'reco : non supportée', micErr: 'Erreur micro : ',
+    copied: 'Journal copié.', copyPrompt: 'Copiez :', confirmClear: 'Effacer tout le journal ? Pensez à l\'exporter avant.',
+    exProto: 'Protocole', exDate: 'Date',
+    next: /^(suivant|suivante|étape suivante)\b/, prev: /^(précédent|précédente|retour)\b/, repeat: /^(répète|répéter|redis|encore)\b/,
+    timer: /^minuteur\s+(\d+|[a-zéèêûô]+)\s*(seconde|minute|heure)/, note: /^note[rz]?\s*:?\s*(.+)/i,
+    units: { seconde: 1, minute: 60, heure: 3600 },
+    nums: { un:1, une:1, deux:2, trois:3, quatre:4, cinq:5, six:6, sept:7, huit:8, neuf:9, dix:10, quinze:15, vingt:20, trente:30 },
+    sample: 'Estérification — lot 24-117\nPeser 12,5 g d\'acide (réactif 1) dans un ballon de 250 mL.\nAjouter 100 mL de méthanol sous agitation.\nAjouter goutte à goutte 1 mL d\'acide sulfurique concentré, sous sorbonne.\nChauffer à reflux 2 heures. Noter la couleur et la température.\nRefroidir à température ambiante, puis évaporer sous vide.',
+  },
+  de: {
+    speech: 'de-DE', wake: 'labor',
+    h1: 'LabVoix — Protokoll freihändig',
+    pasteHint: 'Protokoll einfügen: 1. Zeile = Titel / Chargennummer, danach ein Schritt pro Zeile.',
+    start: 'Starten',
+    cmdHint: 'Befehle: „weiter“, „zurück“, „wiederholen“, „Notiz …“, „Timer 10 Minuten“. Jeder andere Satz wird als Notiz gespeichert. Aktivierungswort-Modus: mit „Labor, …“ beginnen.',
+    ptt: 'Tippen zum Sprechen', wakeOpt: 'Wort „Labor“', contOpt: 'Dauerhaft zuhören',
+    prevBtn: '◀ Zurück', againBtn: '↻ Wiederholen', nextBtn: 'Weiter ▶',
+    share: 'Teilen / OneNote', copy: 'Kopieren', csv: 'Tabelle CSV', edit: 'Protokoll', clear: 'Journal löschen',
+    f_time: 'Zeit', f_note: 'Notiz', f_masse: 'Masse', f_volume: 'Volumen', f_quantite: 'Stoffmenge', f_temperature: 'Temperatur', f_duree: 'Dauer', f_pression: 'Druck', f_pH: 'pH',
+    zone: 'Tippen zum Sprechen', idle: 'Bildschirm (oder Headset-Taste) antippen, dann sprechen.', idleWake: 'Sagen Sie „Labor, …“ und dann den Befehl.',
+    listening: 'Ich höre zu…', step: 'Schritt', of: '/', noted: 'Notiert.', timerOn: 'Timer gestartet.', timerEnd: 'Timer abgelaufen.',
+    logTimerOn: 'Timer gestartet', logTimerEnd: 'Timer abgelaufen', noSteps: '(keine Schritte)',
+    recLocal: 'Erkennung: lokal', recCloud: 'Erkennung: Cloud (Audio → Google)', recNone: 'Erkennung: nicht unterstützt', micErr: 'Mikrofonfehler: ',
+    copied: 'Journal kopiert.', copyPrompt: 'Kopieren:', confirmClear: 'Ganzes Journal löschen? Vorher exportieren.',
+    exProto: 'Protokoll', exDate: 'Datum',
+    next: /^(weiter|nächster|nächste|nächster schritt)\b/, prev: /^(zurück|vorheriger|vorherige)\b/, repeat: /^(wiederholen|wiederhole|nochmal|noch mal)\b/,
+    timer: /^timer\s+(\d+|[a-zäöüß]+)\s*(sekunde|minute|stunde)/, note: /^notiz\s*:?\s*(.+)/i,
+    units: { sekunde: 1, minute: 60, stunde: 3600 },
+    nums: { ein:1, eine:1, eins:1, zwei:2, drei:3, vier:4, 'fünf':5, sechs:6, sieben:7, acht:8, neun:9, zehn:10, 'fünfzehn':15, zwanzig:20, 'dreißig':30 },
+    sample: 'Veresterung — Charge 24-117\n12,5 g Säure (Reagenz 1) in einen 250-mL-Kolben einwiegen.\n100 mL Methanol unter Rühren zugeben.\n1 mL konzentrierte Schwefelsäure tropfenweise im Abzug zugeben.\n2 Stunden unter Rückfluss erhitzen. Farbe und Temperatur notieren.\nAuf Raumtemperatur abkühlen, dann im Vakuum einengen.',
+  },
+};
+
+// --- Command parser (pure, self-checked below) ---
+// wake: when set, only phrases starting with that word are handled; the rest is ignored.
+function parse(text, lang, wake) {
+  const d = L[lang];
+  let t = text.trim();
+  if (wake) {
+    const w = t.match(new RegExp('^' + d.wake + '\\b[\\s,.:!]*', 'i'));
+    if (!w) return { cmd: 'ignore' };
+    t = t.slice(w[0].length);
+    if (!t) return { cmd: 'ignore' };
+  }
+  const l = t.toLowerCase();
+  if (d.next.test(l)) return { cmd: 'next' };
+  if (d.prev.test(l)) return { cmd: 'prev' };
+  if (d.repeat.test(l)) return { cmd: 'repeat' };
+  // shortcut: only digits and a few number words; Chrome usually emits digits anyway
+  const m = l.match(d.timer);
+  if (m) {
+    const n = /^\d+$/.test(m[1]) ? +m[1] : d.nums[m[1]];
+    if (n) return { cmd: 'timer', seconds: n * d.units[m[2]] };
+  }
+  const note = t.match(d.note);
+  return { cmd: 'note', text: note ? note[1] : t };
+}
+console.assert(parse('Suivant', 'fr').cmd === 'next');
+console.assert(parse('précédent', 'fr').cmd === 'prev');
+console.assert(parse('répète', 'fr').cmd === 'repeat');
+console.assert(parse('minuteur 10 minutes', 'fr').seconds === 600);
+console.assert(parse('minuteur deux heures', 'fr').seconds === 7200);
+console.assert(parse('note masse 12,53 g', 'fr').text === 'masse 12,53 g');
+console.assert(parse('solution jaune pâle', 'fr').text === 'solution jaune pâle');
+console.assert(parse('Weiter', 'de').cmd === 'next');
+console.assert(parse('zurück', 'de').cmd === 'prev');
+console.assert(parse('noch mal', 'de').cmd === 'repeat');
+console.assert(parse('Timer fünf Minuten', 'de').seconds === 300);
+console.assert(parse('Notiz Lösung hellgelb', 'de').text === 'Lösung hellgelb');
+console.assert(parse('il faut que je parte', 'fr', true).cmd === 'ignore');
+console.assert(parse('Labo, suivant', 'fr', true).cmd === 'next');
+console.assert(parse('Labo note 62 °C', 'fr', true).text === '62 °C');
+console.assert(parse('Labor, weiter', 'de', true).cmd === 'next');
+console.assert(parse('Laborant kommt', 'de', true).cmd === 'ignore');
+
+// --- Measured values in a note: "12,5 grammes" → masse "12,5 g" (FR and DE unit words) ---
+const UNITS = [
+  ['masse', 'mg', 'mg|milligrammes?|milligramm'],
+  ['masse', 'kg', 'kg|kilogrammes?|kilogramm'],
+  ['masse', 'g', 'g|grammes?|gramm'],
+  ['volume', 'µL', 'µl|μl|microlitres?|mikroliter'],
+  ['volume', 'mL', 'ml|millilitres?|milliliter'],
+  ['volume', 'L', 'l|litres?|liter'],
+  ['quantite', 'mmol', 'mmol|millimoles?|millimol'],
+  ['quantite', 'mol', 'mol|moles?'],
+  ['quantite', 'éq', 'éq|eq|équivalents?|äquivalente?'],
+  ['temperature', '°C', '°\\s?c|degrés?(?: celsius)?|grad(?: celsius)?'],
+  ['duree', 'h', 'h|heures?|stunden?'],
+  ['duree', 'min', 'min|minutes?|minuten'],
+  ['duree', 's', 's|secondes?|sekunden?'],
+  ['pression', 'mbar', 'mbar|millibars?'],
+  ['pression', 'bar', 'bar|bars'],
+];
+const FIELDS = ['masse', 'volume', 'quantite', 'temperature', 'duree', 'pression', 'pH'];
+const UNIT_RE = new RegExp('(-?\\d+(?:[.,]\\d+)?)\\s*(' + UNITS.map(u => u[2]).join('|') + ')(?![\\p{L}\\d])', 'giu');
+function extract(text) {
+  const out = {};
+  const add = (f, v) => { out[f] = out[f] ? out[f] + ', ' + v : v; };
+  for (const m of text.matchAll(UNIT_RE)) {
+    const word = m[2].toLowerCase();
+    const u = UNITS.find(u => new RegExp('^(?:' + u[2] + ')$', 'iu').test(word));
+    add(u[0], m[1].replace('.', ',') + ' ' + u[1]);
+  }
+  const ph = text.match(/\bph\s*(?:de|von|=|:)?\s*(\d+(?:[.,]\d+)?)/i);
+  if (ph) add('pH', ph[1].replace('.', ','));
+  return out;
+}
+console.assert(extract('masse pesée 12,53 g de réactif 2').masse === '12,53 g');
+console.assert(extract('ajouté 2 millilitres et 250 µL').volume === '2 mL, 250 µL');
+console.assert(extract('solution jaune pâle, 62 °C').temperature === '62 °C');
+console.assert(extract('reflux 90 degrés pendant 2 heures').duree === '2 h');
+console.assert(extract('5.2 mmol, 1,1 éq').quantite === '5,2 mmol, 1,1 éq');
+console.assert(extract('Lösung 62 Grad, 15 Minuten gerührt').duree === '15 min');
+console.assert(extract('3 sorbonnes, 2 gants').masse === undefined);
+console.assert(extract('pH de 7,5').pH === '7,5');
+console.assert(extract('vide 20 mbar').pression === '20 mbar');
+
+// --- State (persisted so a reload or crash loses nothing) ---
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d) { try { return JSON.parse(localStorage.getItem('labvoix.' + k)) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('labvoix.' + k, JSON.stringify(v)); } catch {} },
+};
+let lang = store.get('lang', navigator.language.startsWith('de') ? 'de' : 'fr');
+let steps = [], title = '', idx = store.get('idx', 0), log = store.get('log', []);
+const T = k => L[lang][k];
+
+function applyLang() {
+  document.documentElement.lang = lang;
+  $('lang').value = lang;
+  for (const el of document.querySelectorAll('[data-t]')) el.textContent = T(el.dataset.t);
+  $('zone').setAttribute('aria-label', T('zone'));
+  if (!store.get('proto', null)) $('proto').value = T('sample');
+  if (rec) rec.lang = T('speech');
+  idleText();
+}
+$('lang').onchange = () => { lang = $('lang').value; store.set('lang', lang); applyLang(); };
+
+function loadProto() {
+  const lines = $('proto').value.split('\n').map(s => s.trim()).filter(Boolean);
+  title = lines.shift() || T('exProto');
+  steps = lines.length ? lines : [T('noSteps')];
+  idx = Math.min(idx, steps.length - 1);
+}
+
+function speak(text) {
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = T('speech');
+  u.onend = () => { if (wantListening) startRec(); };
+  stopRec(); // don't transcribe our own voice
+  speechSynthesis.speak(u);
+}
+
+function show(say = true) {
+  store.set('idx', idx);
+  $('title').textContent = title;
+  $('stepNum').textContent = `${T('step')} ${idx + 1} ${T('of')} ${steps.length}`;
+  $('stepText').textContent = steps[idx];
+  if (say) speak(`${T('step')} ${idx + 1}. ${steps[idx]}`);
+}
+function nextStep() { if (idx < steps.length - 1) idx++; show(); }
+function prevStep() { if (idx > 0) idx--; show(); }
+const idleText =() => { if (!recOn) $('heard').textContent = T($('listenMode').value === 'wake' ? 'idleWake' : 'idle'); };
+
+function addNote(text) {
+  log.push({ t: new Date().toISOString(), step: idx + 1, text });
+  store.set('log', log);
+  renderLog();
+}
+const hhmmss = iso => new Date(iso).toLocaleTimeString(T('speech'));
+function renderLog() {
+  $('log').innerHTML = '';
+  for (const e of [...log].reverse()) {
+    const li = document.createElement('li');
+    li.innerHTML = `<time>${hhmmss(e.t)}</time>[${T('step')} ${e.step}] `;
+    li.append(e.text); // text node: dictated text is never parsed as HTML
+    const vals = Object.entries(extract(e.text));
+    if (vals.length) {
+      const s = document.createElement('div');
+      s.className = 'hint';
+      s.textContent = vals.map(([f, v]) => `${T('f_' + f)} : ${v}`).join(' · ');
+      li.append(s);
+    }
+    $('log').append(li);
+  }
+}
+// ";" separator so Excel in FR/DE opens it in columns; leading = + - @ neutralised (formula injection).
+const csvCell = v => { v = String(v ?? ''); if (/^[=+\-@]/.test(v)) v = "'" + v; return /[";\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+function exportCsv() {
+  const head = [T('f_time'), T('step'), T('f_note'), ...FIELDS.map(f => T('f_' + f)), T('exProto')];
+  const rows = log.map(e => {
+    const x = extract(e.text);
+    return [new Date(e.t).toLocaleString(T('speech')), e.step, e.text, ...FIELDS.map(f => x[f]), title];
+  });
+  return '﻿' + [head, ...rows].map(r => r.map(csvCell).join(';')).join('\r\n'); // BOM: Excel reads UTF-8 (°, µ)
+}
+async function saveCsv() {
+  const name = `labvoix-${title.replace(/[^\p{L}\d-]+/gu, '_').slice(0, 40)}-${new Date().toISOString().slice(0, 10)}.csv`;
+  const file = new File([exportCsv()], name, { type: 'text/csv' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: name }); return; } catch (e) { if (e.name === 'AbortError') return; }
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(file); a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function exportText() {
+  const day = new Date(log[0] ? log[0].t : Date.now()).toLocaleDateString(T('speech'));
+  return `${T('exProto')} : ${title}\n${T('exDate')} : ${day}\n\n` + log.map(e => `${hhmmss(e.t)}  [${T('step')} ${e.step}] ${e.text}`).join('\n');
+}
+
+// --- Timer ---
+let timerEnd = 0, timerId = 0;
+function startTimer(sec) {
+  clearInterval(timerId);
+  timerEnd = Date.now() + sec * 1000;
+  addNote(`${T('logTimerOn')} : ${sec >= 60 ? Math.round(sec / 60) + ' min' : sec + ' s'}`);
+  timerId = setInterval(() => {
+    const left = Math.max(0, Math.round((timerEnd - Date.now()) / 1000));
+    $('timer').textContent = `⏱ ${String(Math.floor(left / 60)).padStart(2, '0')}:${String(left % 60).padStart(2, '0')}`;
+    if (!left) { clearInterval(timerId); beep(); addNote(T('logTimerEnd')); speak(T('timerEnd')); }
+  }, 500);
+}
+function beep() {
+  try {
+    const a = new AudioContext(), o = a.createOscillator();
+    o.connect(a.destination); o.frequency.value = 880; o.start(); o.stop(a.currentTime + 0.6);
+  } catch {}
+}
+
+// --- Speech recognition ---
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null, recOn = false, wantListening = false;
+const keepListening = () => $('listenMode').value !== 'ptt';
+
+async function initRec() {
+  if (!SR) { $('mode').textContent = T('recNone'); return; }
+  rec = new SR();
+  rec.lang = T('speech');
+  rec.interimResults = true;
+  let local = false;
+  // Ask for on-device recognition when the browser offers it (audio stays on the phone).
+  if ('processLocally' in rec && SR.available) {
+    try {
+      const opt = { langs: [T('speech')], processLocally: true };
+      let st = await SR.available(opt);
+      if (st === 'downloadable' && SR.install) st = (await SR.install(opt)) ? 'available' : st;
+      local = st === 'available';
+    } catch {}
+    rec.processLocally = local;
+  }
+  $('mode').textContent = T(local ? 'recLocal' : 'recCloud');
+  $('mode').className = 'badge ' + (local ? 'local' : 'cloud');
+
+  rec.onresult = ev => {
+    const r = ev.results[ev.results.length - 1];
+    $('heard').textContent = '« ' + r[0].transcript + ' »';
+    if (r.isFinal) handle(r[0].transcript, $('listenMode').value === 'wake');
+  };
+  rec.onend = () => {
+    recOn = false;
+    $('zone').classList.remove('listening');
+    if (wantListening && keepListening() && !speechSynthesis.speaking) startRec();
+    else if (!keepListening()) wantListening = false;
+  };
+  rec.onerror = ev => { if (ev.error !== 'no-speech' && ev.error !== 'aborted') $('heard').textContent = T('micErr') + ev.error; };
+}
+function startRec() {
+  if (!rec || recOn) return;
+  try { rec.start(); recOn = true; $('zone').classList.add('listening'); $('heard').textContent = T('listening'); } catch {}
+}
+function stopRec() { if (rec && recOn) rec.abort(); }
+function toggleRec() {
+  if (recOn) { wantListening = false; stopRec(); }
+  else { wantListening = true; speechSynthesis.cancel(); startRec(); }
+}
+$('listenMode').onchange = () => { store.set('listenMode', $('listenMode').value); idleText(); };
+
+function handle(text, wake = false) {
+  const p = parse(text, lang, wake);
+  if (p.cmd === 'ignore') return;
+  if (p.cmd === 'next') nextStep();
+  else if (p.cmd === 'prev') prevStep();
+  else if (p.cmd === 'repeat') show();
+  else if (p.cmd === 'timer') { startTimer(p.seconds); speak(T('timerOn')); }
+  else if (p.text) { addNote(p.text); speak(T('noted')); }
+}
+
+// --- Headset button: Android only routes media keys to a page that is playing audio ---
+// shortcut: silent loop to hold the media session; works on some headsets only, test yours.
+function grabMediaButton() {
+  if (!('mediaSession' in navigator)) return;
+  const silent = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=');
+  silent.loop = true;
+  silent.play().catch(() => {});
+  for (const a of ['play', 'pause', 'stop']) {
+    try { navigator.mediaSession.setActionHandler(a, () => { toggleRec(); silent.play().catch(() => {}); }); } catch {}
+  }
+  try { navigator.mediaSession.setActionHandler('nexttrack', nextStep); } catch {}
+  try { navigator.mediaSession.setActionHandler('previoustrack', prevStep); } catch {}
+}
+
+async function keepAwake() { try { await navigator.wakeLock.request('screen'); } catch {} }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !$('run').hidden) keepAwake(); });
+
+// --- UI wiring ---
+let started = false;
+async function begin() {
+  // Browsers only allow audio/mic after a tap, so this runs from a click handler.
+  if (started) return;
+  started = true;
+  await initRec();
+  grabMediaButton();
+  keepAwake();
+  show();
+  if (keepListening()) { wantListening = true; }
+}
+function enterRun() {
+  loadProto();
+  $('setup').hidden = true; $('run').hidden = false;
+  store.set('running', true);
+  renderLog();
+  show(false);
+}
+$('start').onclick = () => { store.set('proto', $('proto').value); enterRun(); begin(); };
+// First tap after reopening only unlocks audio and reads the step.
+$('zone').onclick = () => started ? toggleRec() : begin();
+$('zone').onkeydown = e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); $('zone').onclick(); } };
+$('next').onclick = nextStep;
+$('prev').onclick = prevStep;
+$('again').onclick = () => show();
+$('edit').onclick = () => { stopRec(); wantListening = false; store.set('running', false); $('run').hidden = true; $('setup').hidden = false; };
+$('copy').onclick = async () => { try { await navigator.clipboard.writeText(exportText()); $('heard').textContent = T('copied'); } catch { prompt(T('copyPrompt'), exportText()); } };
+$('csv').onclick = saveCsv;
+$('share').onclick = async () => {
+  if (navigator.share) { try { await navigator.share({ title: title, text: exportText() }); } catch {} }
+  else $('copy').onclick();
+};
+$('clear').onclick = () => {
+  if (!confirm(T('confirmClear'))) return;
+  log = []; store.set('log', log); renderLog();
+};
+
+// --- Boot: reopening the app (e.g. "Hey Google, open LabVoix") goes straight back to the run ---
+$('listenMode').value = store.get('listenMode', 'ptt');
+const savedProto = store.get('proto', null);
+if (savedProto) $('proto').value = savedProto;
+applyLang();
+if (savedProto && store.get('running', false)) enterRun();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+# LabVoix
+
+Protocole de labo mains libres — Laborprotokoll freihändig.
+
+Une page web installable (PWA) qui lit un protocole étape par étape et enregistre les observations dictées avec un horodatage. Français et allemand.
+
+## Utilisation / Verwendung
+
+1. Ouvrir la page dans Chrome sur Android → ⋮ → *Installer l'application*.
+2. Coller le protocole : 1ʳᵉ ligne = titre / n° de lot, puis une étape par ligne.
+3. Parler :
+
+| FR | DE |
+|---|---|
+| suivant / précédent / répète | weiter / zurück / wiederholen |
+| note … | Notiz … |
+| minuteur 10 minutes | Timer 10 Minuten |
+| « Labo, … » (mode mot d'activation) | „Labor, …“ (Aktivierungswort-Modus) |
+
+4. Exporter : *Partager* → OneNote, *Copier* → ELN, ou *Tableau CSV* → Excel.
+   Les valeurs dictées sont reconnues et mises en colonnes : masse (mg, g, kg), volume (µL, mL, L), quantité (mmol, mol, éq), température (°C), durée (s, min, h), pression (mbar, bar), pH — en français et en allemand („12,5 Gramm“, „62 Grad“).
+
+## Mise en ligne / Veröffentlichen (GitHub Pages)
+
+1. Créer un dépôt vide `labvoix` sur GitHub.
+2. Dans ce dossier :
+   ```bash
+   git remote add origin https://github.com/<compte>/labvoix.git
+   git push -u origin main
+   ```
+3. GitHub → *Settings* → *Pages* → *Deploy from a branch* → `main` / `(root)`.
+4. Ouvrir `https://<compte>.github.io/labvoix/` sur le téléphone.
+
+Ouvrir à la voix : « Ok Google, ouvre LabVoix » / „Hey Google, öffne LabVoix“.
+
+## Confidentialité / Datenschutz
+
+- Les notes restent dans le navigateur du téléphone (localStorage) jusqu'à l'export.
+- La reconnaissance vocale est celle de Chrome. Le badge indique si elle tourne **sur l'appareil** ou **dans le cloud (Google)**. Ne pas dicter d'informations confidentielles en mode cloud.
+- Brouillon d'observations, pas un enregistrement GxP.
+
+## Fichiers
+
+`index.html` (toute l'appli) · `manifest.webmanifest` · `sw.js` (ouverture hors ligne) · `icon-*.png`
