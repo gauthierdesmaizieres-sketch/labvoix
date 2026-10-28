@@ -98,7 +98,7 @@ const L = {
     f_time: 'Heure', f_note: 'Note', f_masse: 'Masse', f_volume: 'Volume', f_quantite: 'Quantité', f_temperature: 'Température', f_duree: 'Durée', f_pression: 'Pression', f_pH: 'pH',
     zone: 'Toucher pour parler', idle: 'Touchez l\'écran (ou le bouton du casque) puis parlez.', idleWake: 'Dites « Labo, … » suivi de la commande.',
     listening: 'J\'écoute…', step: 'Étape', of: '/', noted: 'Noté.', timerOn: 'Minuteur lancé.', timerEnd: 'Minuteur terminé.',
-    logTimerOn: 'minuteur lancé', logTimerEnd: 'minuteur terminé', noSteps: '(aucune étape)',
+    logStep: '▶ début de l’étape', logTimerOn: 'minuteur lancé', logTimerEnd: 'minuteur terminé', noSteps: '(aucune étape)',
     recLocal: 'reco : locale', recCloud: 'reco : cloud (audio → Google)', recNone: 'reco : non supportée', micErr: 'Erreur micro : ',
     copied: 'Journal copié.', copyPrompt: 'Copiez :', confirmClear: 'Effacer tout le journal ? Pensez à l\'exporter avant.',
     exProto: 'Protocole', exDate: 'Date',
@@ -120,7 +120,7 @@ const L = {
     f_time: 'Zeit', f_note: 'Notiz', f_masse: 'Masse', f_volume: 'Volumen', f_quantite: 'Stoffmenge', f_temperature: 'Temperatur', f_duree: 'Dauer', f_pression: 'Druck', f_pH: 'pH',
     zone: 'Tippen zum Sprechen', idle: 'Bildschirm (oder Headset-Taste) antippen, dann sprechen.', idleWake: 'Sagen Sie „Labor, …“ und dann den Befehl.',
     listening: 'Ich höre zu…', step: 'Schritt', of: '/', noted: 'Notiert.', timerOn: 'Timer gestartet.', timerEnd: 'Timer abgelaufen.',
-    logTimerOn: 'Timer gestartet', logTimerEnd: 'Timer abgelaufen', noSteps: '(keine Schritte)',
+    logStep: '▶ Beginn Schritt', logTimerOn: 'Timer gestartet', logTimerEnd: 'Timer abgelaufen', noSteps: '(keine Schritte)',
     recLocal: 'Erkennung: lokal', recCloud: 'Erkennung: Cloud (Audio → Google)', recNone: 'Erkennung: nicht unterstützt', micErr: 'Mikrofonfehler: ',
     copied: 'Journal kopiert.', copyPrompt: 'Kopieren:', confirmClear: 'Ganzes Journal löschen? Vorher exportieren.',
     exProto: 'Protokoll', exDate: 'Datum',
@@ -260,8 +260,10 @@ function show(say = true) {
   $('stepText').textContent = steps[idx];
   if (say) speak(`${T('step')} ${idx + 1}. ${steps[idx]}`);
 }
-function nextStep() { if (idx < steps.length - 1) idx++; show(); }
-function prevStep() { if (idx > 0) idx--; show(); }
+// Changing step logs its start time, so the journal shows when each step was done.
+function goTo(i) { if (i !== idx) { idx = i; addNote(`${T('logStep')} ${idx + 1}`); } show(); }
+function nextStep() { goTo(Math.min(idx + 1, steps.length - 1)); }
+function prevStep() { goTo(Math.max(idx - 1, 0)); }
 const idleText =() => { if (!recOn) $('heard').textContent = T($('listenMode').value === 'wake' ? 'idleWake' : 'idle'); };
 
 function addNote(text) {
@@ -424,7 +426,7 @@ function enterRun() {
   renderLog();
   show(false);
 }
-$('start').onclick = () => { store.set('proto', $('proto').value); enterRun(); begin(); };
+$('start').onclick = () => { store.set('proto', $('proto').value); enterRun(); addNote(`${T('logStep')} ${idx + 1}`); begin(); };
 // First tap after reopening only unlocks audio and reads the step.
 $('zone').onclick = () => started ? toggleRec() : begin();
 $('zone').onkeydown = e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); $('zone').onclick(); } };
