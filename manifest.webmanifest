@@ -1,7 +1,7 @@
 {
   "id": "labvoix-app",
-  "name": "LabVoix",
-  "short_name": "LabVoix",
+  "name": "Kobalt",
+  "short_name": "Kobalt",
   "description": "Protocole de labo mains libres : lecture des étapes, notes dictées horodatées (FR/DE).",
   "lang": "fr",
   "start_url": "./?app=1",

@@ -1,4 +1,4 @@
-# LabVoix
+# Kobalt
 
 Protocole de labo mains libres — Laborprotokoll freihändig.
 
@@ -15,7 +15,7 @@ Une page web installable (PWA) qui lit un protocole étape par étape et enregis
 | suivant / précédent / répète | weiter / zurück / wiederholen |
 | note … | Notiz … |
 | minuteur 10 minutes | Timer 10 Minuten |
-| « Labo, … » (mode mot d'activation) | „Labor, …“ (Aktivierungswort-Modus) |
+| « Kobalt, … » (mode mot d'activation) | „Kobalt, …“ (Aktivierungswort-Modus) |
 
 4. Exporter : *Partager* → OneNote, *Copier* → ELN, ou *Tableau CSV* → Excel.
    Les valeurs dictées sont reconnues et mises en colonnes : masse (mg, g, kg), volume (µL, mL, L), quantité (mmol, mol, éq), température (°C), durée (s, min, h), pression (mbar, bar), pH — en français et en allemand („12,5 Gramm“, „62 Grad“).
@@ -31,15 +31,15 @@ Une page web installable (PWA) qui lit un protocole étape par étape et enregis
 3. GitHub → *Settings* → *Pages* → *Deploy from a branch* → `main` / `(root)`.
 4. Ouvrir `https://<compte>.github.io/labvoix/` sur le téléphone.
 
-Ouvrir à la voix : « Ok Google, ouvre LabVoix » / „Hey Google, öffne LabVoix“.
+Ouvrir à la voix : « Ok Google, ouvre Kobalt » / „Hey Google, öffne Kobalt“.
 
 ## iPhone
 
 1. Ouvrir le lien dans **Safari** → bouton Partager ⬆ → **Sur l'écran d'accueil**.
 2. Autoriser le micro et la reconnaissance vocale au premier toucher.
-3. Ouvrir à la voix : app **Raccourcis** → nouveau raccourci → action **Ouvrir l'URL** (le lien de LabVoix) → le nommer « LabVoix » → « Dis Siri, LabVoix ».
+3. Ouvrir à la voix : app **Raccourcis** → nouveau raccourci → action **Ouvrir l'URL** (le lien de Kobalt) → le nommer « Kobalt » → « Dis Siri, Kobalt ».
 
-Si le badge indique « non supportée » depuis l'icône de l'écran d'accueil (certaines versions d'iOS), ouvrir LabVoix directement dans Safari : la reconnaissance vocale y fonctionne. Sur iPhone, l'audio est traité par Apple (Siri).
+Si le badge indique « non supportée » depuis l'icône de l'écran d'accueil (certaines versions d'iOS), ouvrir Kobalt directement dans Safari : la reconnaissance vocale y fonctionne. Sur iPhone, l'audio est traité par Apple (Siri).
 
 ## Confidentialité / Datenschutz
 

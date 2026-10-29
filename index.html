@@ -6,11 +6,11 @@
 <meta name="theme-color" content="#f8fbfc" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#12303d" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="LabVoix">
+<meta name="apple-mobile-web-app-title" content="Kobalt">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>LabVoix</title>
+<title>Kobalt</title>
 <style>
   /* Lab look: white benches, ice-blue light, glassware, cyan accents */
   :root { --bg:#e9f0f4; --bg2:#f8fbfc; --fg:#12303d; --muted:#5d7682; --card:rgba(255,255,255,.72); --glass:rgba(255,255,255,.55);
@@ -62,14 +62,73 @@
   #log li:last-child { border-bottom:0; }
   #log time { color:var(--accent); font-variant-numeric:tabular-nums; margin-right:6px; }
   .hint { font-size:14px; color:var(--muted); }
+
+  /* --- Designs: each one only overrides tokens, plus a line drawing of lab glassware behind the content --- */
+  :root { --motif:#0b8bb0; --motif-op:.16; }
+  .motif { position:fixed; right:0; bottom:0; width:min(92vw,520px); height:auto; color:var(--motif); opacity:var(--motif-op);
+           z-index:-1; pointer-events:none; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+  .motif g { display:none; }
+  [data-theme=glas] .m-glas, [data-theme=kobalt] .m-kobalt, [data-theme=laborbuch] .m-laborbuch, [data-theme=abzug] .m-abzug { display:inline; }
+
+  /* Kobalt: deep cobalt blue, titration burette */
+  :root[data-theme=kobalt] { --bg:#071c4d; --bg2:#0d2f7a; --fg:#f2f6ff; --muted:#a9bde6; --card:rgba(255,255,255,.08); --glass:rgba(255,255,255,.10);
+    --accent:#6fb1ff; --accent2:#a8d1ff; --rec:#ff6b6b; --line:rgba(255,255,255,.18); --shadow:0 8px 28px rgba(0,0,0,.35); --warn:#ffc061; --motif:#a8d1ff; --motif-op:.20; }
+  :root[data-theme=kobalt] body { background:radial-gradient(80% 40% at 50% 0%, rgba(111,177,255,.25), transparent 70%), linear-gradient(180deg, var(--bg2), var(--bg)) fixed; }
+  :root[data-theme=kobalt] button.primary { color:#071c4d; }
+
+  /* Laborbuch: lab-notebook grid paper, ink blue, test tubes and pipette */
+  :root[data-theme=laborbuch] { --bg:#fbfaf5; --bg2:#fbfaf5; --fg:#1b2a4a; --muted:#5c6780; --card:rgba(255,255,255,.88); --glass:#fff;
+    --accent:#2346a0; --accent2:#2346a0; --rec:#c62828; --line:#d9dde6; --shadow:0 1px 0 #d9dde6; --warn:#a15c00; --motif:#2346a0; --motif-op:.14; }
+  :root[data-theme=laborbuch] body { background:
+      repeating-linear-gradient(0deg, transparent 0 23px, rgba(35,70,160,.07) 23px 24px),
+      repeating-linear-gradient(90deg, transparent 0 23px, rgba(35,70,160,.07) 23px 24px), var(--bg); }
+  :root[data-theme=laborbuch] #zone, :root[data-theme=laborbuch] #log, :root[data-theme=laborbuch] textarea { backdrop-filter:none; border-width:1px; }
+  :root[data-theme=laborbuch] #zone::before { background:var(--accent); height:3px; }
+  :root[data-theme=laborbuch] button { box-shadow:none; }
+
+  /* Abzug: fume-hood graphite with safety-yellow accents, reflux setup */
+  :root[data-theme=abzug] { --bg:#15191c; --bg2:#22282c; --fg:#f1f1ec; --muted:#a3a9a6; --card:rgba(40,47,52,.85); --glass:#2b3237;
+    --accent:#f2b134; --accent2:#f7cc6b; --rec:#ff5a4f; --line:#3a4248; --shadow:0 8px 24px rgba(0,0,0,.4); --warn:#f2b134; --motif:#f2b134; --motif-op:.12; }
+  :root[data-theme=abzug] body { background:linear-gradient(180deg, var(--bg2), var(--bg)) fixed; }
+  :root[data-theme=abzug] button.primary { color:#15191c; }
+  :root[data-theme=abzug] #zone::before { height:6px; background:repeating-linear-gradient(135deg, var(--accent) 0 12px, #15191c 12px 24px); }
   [hidden] { display:none !important; }
 </style>
 </head>
 <body>
+<svg class="motif" viewBox="0 0 400 300" aria-hidden="true">
+  <g class="m-glas"><!-- Erlenmeyer, volumetric flask, test-tube rack -->
+    <path d="M292 150v48l-34 72q-4 10 8 10h68q12 0 8-10l-34-72v-48"/><path d="M286 150h28"/><path d="M266 252h68"/>
+    <path d="M212 120v108"/><path d="M228 120v108"/><path d="M206 120h28"/><path d="M212 160h16"/><circle cx="220" cy="252" r="30"/>
+    <path d="M40 210h130"/><path d="M40 284h130"/><path d="M48 210v74"/><path d="M162 210v74"/>
+    <rect x="62" y="180" width="14" height="96" rx="7"/><rect x="90" y="180" width="14" height="96" rx="7"/><rect x="118" y="180" width="14" height="96" rx="7"/>
+  </g>
+  <g class="m-kobalt"><!-- titration: stand, clamp, burette, Erlenmeyer, beaker -->
+    <path d="M40 288h150"/><path d="M70 288V40"/><path d="M70 100h70"/><rect x="134" y="30" width="14" height="170" rx="4"/>
+    <path d="M134 60h7M134 80h7M134 100h7M134 120h7M134 140h7M134 160h7M134 180h7"/><path d="M141 200v14"/><path d="M136 206h10"/>
+    <path d="M130 226v16l-28 38q-3 6 4 6h70q7 0 4-6l-28-38v-16"/><path d="M126 226h18"/><path d="M112 268h58"/>
+    <path d="M270 190v88q0 8 8 8h64q8 0 8-8v-88"/><path d="M262 186l8 4"/><path d="M276 220h20M276 245h20"/>
+  </g>
+  <g class="m-laborbuch"><!-- test tubes in a rack, pipette, beaker -->
+    <path d="M30 230h170"/><path d="M30 286h170"/><path d="M38 230v56M192 230v56"/>
+    <path d="M56 170v100q0 10 10 10t10-10V170"/><path d="M96 150v120q0 10 10 10t10-10V150"/><path d="M136 180v90q0 10 10 10t10-10V180"/>
+    <path d="M56 240h20M96 228h20M136 250h20"/>
+    <path d="M256 40l90 230"/><ellipse cx="248" cy="30" rx="10" ry="16" transform="rotate(-21 248 30)"/><path d="M300 150l10-4M312 180l10-4"/>
+    <path d="M330 200v70q0 8 8 8h40"/>
+  </g>
+  <g class="m-abzug"><!-- reflux: round-bottom flask, Liebig condenser, stand, heating mantle -->
+    <path d="M40 290h160"/><path d="M60 290V30"/><path d="M60 120h50"/><path d="M60 200h40"/>
+    <path d="M110 196v-30h20v30"/><circle cx="120" cy="230" r="36"/><path d="M84 238q36 22 72 0"/>
+    <path d="M78 260q42 40 84 0"/>
+    <path d="M110 166V40h20v126"/><path d="M104 70h32v80h-32z"/><path d="M136 80h18M136 140h18"/>
+    <path d="M250 150h100v130H250z"/><path d="M250 180h100"/><path d="M265 165h10M325 165h10"/>
+  </g>
+</svg>
 <main>
   <section id="setup">
     <div class="row" style="justify-content:space-between;align-items:center">
       <h1 data-t="h1"></h1>
+      <select id="theme" aria-label="Design"><option value="glas">Glas</option><option value="kobalt">Kobalt</option><option value="laborbuch">Laborbuch</option><option value="abzug">Abzug</option></select>
       <select id="lang" aria-label="Langue / Sprache"><option value="fr">Français</option><option value="de">Deutsch</option></select>
     </div>
     <p class="hint" data-t="pasteHint"></p>
@@ -115,20 +174,20 @@
 // --- Texts and voice commands per language ---
 const L = {
   fr: {
-    speech: 'fr-FR', wake: 'labo',
-    h1: 'LabVoix — protocole mains libres',
+    speech: 'fr-FR', wake: '(?:kobalt|cobalt)',
+    h1: 'Kobalt — protocole mains libres',
     pasteHint: 'Collez le protocole : 1ʳᵉ ligne = titre / n° de lot, puis une étape par ligne.',
     start: 'Démarrer',
-    cmdHint: 'Commandes : « suivant », « précédent », « répète », « note … », « minuteur 10 minutes ». Toute autre phrase est notée telle quelle. Mode mot d\'activation : commencer par « Labo, … ».',
-    ptt: 'Toucher pour parler', wakeOpt: 'Mot « Labo »', contOpt: 'Écoute continue',
+    cmdHint: 'Commandes : « suivant », « précédent », « répète », « note … », « minuteur 10 minutes ». Toute autre phrase est notée telle quelle. Mode mot d\'activation : commencer par « Kobalt, … ».',
+    ptt: 'Toucher pour parler', wakeOpt: 'Mot « Kobalt »', contOpt: 'Écoute continue',
     prevBtn: '◀ Précédent', againBtn: '↻ Répète', nextBtn: 'Suivant ▶',
     share: 'Partager / OneNote', copy: 'Copier', csv: 'Tableau CSV', edit: 'Protocole', clear: 'Effacer journal',
     f_time: 'Heure', f_note: 'Note', f_masse: 'Masse', f_volume: 'Volume', f_quantite: 'Quantité', f_temperature: 'Température', f_duree: 'Durée', f_pression: 'Pression', f_pH: 'pH',
-    zone: 'Toucher pour parler', idle: 'Touchez l\'écran (ou le bouton du casque) puis parlez.', idleWake: 'Dites « Labo, … » suivi de la commande.',
+    zone: 'Toucher pour parler', idle: 'Touchez l\'écran (ou le bouton du casque) puis parlez.', idleWake: 'Dites « Kobalt, … » suivi de la commande.',
     listening: 'J\'écoute…', step: 'Étape', of: '/', noted: 'Noté.', timerOn: 'Minuteur lancé.', timerEnd: 'Minuteur terminé.',
     logStep: '▶ début de l’étape', logTimerOn: 'minuteur lancé', logTimerEnd: 'minuteur terminé', noSteps: '(aucune étape)',
     recLocal: 'reco : locale', recCloud: 'reco : cloud (audio → Google/Apple)', recNone: 'reco : non supportée (iPhone : ouvrir dans Safari)',
-    iosHint: 'iPhone : Partager ⬆ → « Sur l’écran d’accueil » pour installer LabVoix. Siri : app Raccourcis → « Ouvrir l’URL » de cette page, nommé « LabVoix ».', micErr: 'Erreur micro : ',
+    iosHint: 'iPhone : Partager ⬆ → « Sur l’écran d’accueil » pour installer Kobalt. Siri : app Raccourcis → « Ouvrir l’URL » de cette page, nommé « Kobalt ».', micErr: 'Erreur micro : ',
     copied: 'Journal copié.', copyPrompt: 'Copiez :', confirmClear: 'Effacer tout le journal ? Pensez à l\'exporter avant.',
     exProto: 'Protocole', exDate: 'Date',
     next: /^(suivant|suivante|étape suivante)\b/, prev: /^(précédent|précédente|retour)\b/, repeat: /^(répète|répéter|redis|encore)\b/,
@@ -138,20 +197,20 @@ const L = {
     sample: 'Estérification — lot 24-117\nPeser 12,5 g d\'acide (réactif 1) dans un ballon de 250 mL.\nAjouter 100 mL de méthanol sous agitation.\nAjouter goutte à goutte 1 mL d\'acide sulfurique concentré, sous sorbonne.\nChauffer à reflux 2 heures. Noter la couleur et la température.\nRefroidir à température ambiante, puis évaporer sous vide.',
   },
   de: {
-    speech: 'de-DE', wake: 'labor',
-    h1: 'LabVoix — Protokoll freihändig',
+    speech: 'de-DE', wake: '(?:kobalt|cobalt)',
+    h1: 'Kobalt — Protokoll freihändig',
     pasteHint: 'Protokoll einfügen: 1. Zeile = Titel / Chargennummer, danach ein Schritt pro Zeile.',
     start: 'Starten',
-    cmdHint: 'Befehle: „weiter“, „zurück“, „wiederholen“, „Notiz …“, „Timer 10 Minuten“. Jeder andere Satz wird als Notiz gespeichert. Aktivierungswort-Modus: mit „Labor, …“ beginnen.',
-    ptt: 'Tippen zum Sprechen', wakeOpt: 'Wort „Labor“', contOpt: 'Dauerhaft zuhören',
+    cmdHint: 'Befehle: „weiter“, „zurück“, „wiederholen“, „Notiz …“, „Timer 10 Minuten“. Jeder andere Satz wird als Notiz gespeichert. Aktivierungswort-Modus: mit „Kobalt, …“ beginnen.',
+    ptt: 'Tippen zum Sprechen', wakeOpt: 'Wort „Kobalt“', contOpt: 'Dauerhaft zuhören',
     prevBtn: '◀ Zurück', againBtn: '↻ Wiederholen', nextBtn: 'Weiter ▶',
     share: 'Teilen / OneNote', copy: 'Kopieren', csv: 'Tabelle CSV', edit: 'Protokoll', clear: 'Journal löschen',
     f_time: 'Zeit', f_note: 'Notiz', f_masse: 'Masse', f_volume: 'Volumen', f_quantite: 'Stoffmenge', f_temperature: 'Temperatur', f_duree: 'Dauer', f_pression: 'Druck', f_pH: 'pH',
-    zone: 'Tippen zum Sprechen', idle: 'Bildschirm (oder Headset-Taste) antippen, dann sprechen.', idleWake: 'Sagen Sie „Labor, …“ und dann den Befehl.',
+    zone: 'Tippen zum Sprechen', idle: 'Bildschirm (oder Headset-Taste) antippen, dann sprechen.', idleWake: 'Sagen Sie „Kobalt, …“ und dann den Befehl.',
     listening: 'Ich höre zu…', step: 'Schritt', of: '/', noted: 'Notiert.', timerOn: 'Timer gestartet.', timerEnd: 'Timer abgelaufen.',
     logStep: '▶ Beginn Schritt', logTimerOn: 'Timer gestartet', logTimerEnd: 'Timer abgelaufen', noSteps: '(keine Schritte)',
     recLocal: 'Erkennung: lokal', recCloud: 'Erkennung: Cloud (Audio → Google/Apple)', recNone: 'Erkennung: nicht unterstützt (iPhone: in Safari öffnen)',
-    iosHint: 'iPhone: Teilen ⬆ → „Zum Home-Bildschirm“, um LabVoix zu installieren. Siri: App Kurzbefehle → „URL öffnen“ mit dieser Seite, Name „LabVoix“.', micErr: 'Mikrofonfehler: ',
+    iosHint: 'iPhone: Teilen ⬆ → „Zum Home-Bildschirm“, um Kobalt zu installieren. Siri: App Kurzbefehle → „URL öffnen“ mit dieser Seite, Name „Kobalt“.', micErr: 'Mikrofonfehler: ',
     copied: 'Journal kopiert.', copyPrompt: 'Kopieren:', confirmClear: 'Ganzes Journal löschen? Vorher exportieren.',
     exProto: 'Protokoll', exDate: 'Datum',
     next: /^(weiter|nächster|nächste|nächster schritt)\b/, prev: /^(zurück|vorheriger|vorherige)\b/, repeat: /^(wiederholen|wiederhole|nochmal|noch mal)\b/,
@@ -199,10 +258,10 @@ console.assert(parse('noch mal', 'de').cmd === 'repeat');
 console.assert(parse('Timer fünf Minuten', 'de').seconds === 300);
 console.assert(parse('Notiz Lösung hellgelb', 'de').text === 'Lösung hellgelb');
 console.assert(parse('il faut que je parte', 'fr', true).cmd === 'ignore');
-console.assert(parse('Labo, suivant', 'fr', true).cmd === 'next');
-console.assert(parse('Labo note 62 °C', 'fr', true).text === '62 °C');
-console.assert(parse('Labor, weiter', 'de', true).cmd === 'next');
-console.assert(parse('Laborant kommt', 'de', true).cmd === 'ignore');
+console.assert(parse('Kobalt, suivant', 'fr', true).cmd === 'next');
+console.assert(parse('cobalt note 62 °C', 'fr', true).text === '62 °C');
+console.assert(parse('Kobalt, weiter', 'de', true).cmd === 'next');
+console.assert(parse('Kobaltblau ist schön', 'de', true).cmd === 'ignore');
 
 // --- Measured values in a note: "12,5 grammes" → masse "12,5 g" (FR and DE unit words) ---
 const UNITS = [
@@ -248,6 +307,7 @@ console.assert(extract('vide 20 mbar').pression === '20 mbar');
 
 // --- State (persisted so a reload or crash loses nothing) ---
 const $ = id => document.getElementById(id);
+// Keys keep the old 'labvoix.' prefix so journals saved before the rename to Kobalt are kept.
 const store = {
   get(k, d) { try { return JSON.parse(localStorage.getItem('labvoix.' + k)) ?? d; } catch { return d; } },
   set(k, v) { try { localStorage.setItem('labvoix.' + k, JSON.stringify(v)); } catch {} },
@@ -329,7 +389,7 @@ function exportCsv() {
   return '﻿' + [head, ...rows].map(r => r.map(csvCell).join(';')).join('\r\n'); // BOM: Excel reads UTF-8 (°, µ)
 }
 async function saveCsv() {
-  const name = `labvoix-${title.replace(/[^\p{L}\d-]+/gu, '_').slice(0, 40)}-${new Date().toISOString().slice(0, 10)}.csv`;
+  const name = `kobalt-${title.replace(/[^\p{L}\d-]+/gu, '_').slice(0, 40)}-${new Date().toISOString().slice(0, 10)}.csv`;
   const file = new File([exportCsv()], name, { type: 'text/csv' });
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     try { await navigator.share({ files: [file], title: name }); return; } catch (e) { if (e.name === 'AbortError') return; }
@@ -475,10 +535,19 @@ $('clear').onclick = () => {
   log = []; store.set('log', log); renderLog();
 };
 
-// --- Boot: reopening the app (e.g. "Hey Google, open LabVoix") goes straight back to the run ---
+// --- Boot: reopening the app (e.g. "Hey Google, open Kobalt") goes straight back to the run ---
 $('listenMode').value = store.get('listenMode', 'ptt');
 const savedProto = store.get('proto', null);
 if (savedProto) $('proto').value = savedProto;
+// Design: theme-color follows the bar colour of each design.
+const BAR = { glas: '#f8fbfc', kobalt: '#0d2f7a', laborbuch: '#fbfaf5', abzug: '#22282c' };
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  $('theme').value = t;
+  for (const m of document.querySelectorAll('meta[name=theme-color]')) m.content = BAR[t];
+}
+$('theme').onchange = () => { store.set('theme', $('theme').value); applyTheme($('theme').value); };
+applyTheme(store.get('theme', 'glas'));
 applyLang();
 // iPhone/iPad Safari has no install prompt: explain the manual way (iPadOS reports itself as Mac with touch).
 const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
