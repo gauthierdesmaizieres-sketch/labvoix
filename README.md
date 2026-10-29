@@ -33,6 +33,14 @@ Une page web installable (PWA) qui lit un protocole étape par étape et enregis
 
 Ouvrir à la voix : « Ok Google, ouvre LabVoix » / „Hey Google, öffne LabVoix“.
 
+## iPhone
+
+1. Ouvrir le lien dans **Safari** → bouton Partager ⬆ → **Sur l'écran d'accueil**.
+2. Autoriser le micro et la reconnaissance vocale au premier toucher.
+3. Ouvrir à la voix : app **Raccourcis** → nouveau raccourci → action **Ouvrir l'URL** (le lien de LabVoix) → le nommer « LabVoix » → « Dis Siri, LabVoix ».
+
+Si le badge indique « non supportée » depuis l'icône de l'écran d'accueil (certaines versions d'iOS), ouvrir LabVoix directement dans Safari : la reconnaissance vocale y fonctionne. Sur iPhone, l'audio est traité par Apple (Siri).
+
 ## Confidentialité / Datenschutz
 
 - Les notes restent dans le navigateur du téléphone (localStorage) jusqu'à l'export.

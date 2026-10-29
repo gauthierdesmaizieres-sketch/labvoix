@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0a6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="LabVoix">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -50,6 +52,7 @@
     <textarea id="proto"></textarea>
     <div class="row"><button class="primary" id="start" data-t="start"></button></div>
     <p class="hint" data-t="cmdHint"></p>
+    <p class="hint" id="iosHint" data-t="iosHint" hidden></p>
   </section>
 
   <section id="run" hidden>
@@ -100,7 +103,8 @@ const L = {
     zone: 'Toucher pour parler', idle: 'Touchez l\'écran (ou le bouton du casque) puis parlez.', idleWake: 'Dites « Labo, … » suivi de la commande.',
     listening: 'J\'écoute…', step: 'Étape', of: '/', noted: 'Noté.', timerOn: 'Minuteur lancé.', timerEnd: 'Minuteur terminé.',
     logStep: '▶ début de l’étape', logTimerOn: 'minuteur lancé', logTimerEnd: 'minuteur terminé', noSteps: '(aucune étape)',
-    recLocal: 'reco : locale', recCloud: 'reco : cloud (audio → Google)', recNone: 'reco : non supportée', micErr: 'Erreur micro : ',
+    recLocal: 'reco : locale', recCloud: 'reco : cloud (audio → Google/Apple)', recNone: 'reco : non supportée (iPhone : ouvrir dans Safari)',
+    iosHint: 'iPhone : Partager ⬆ → « Sur l’écran d’accueil » pour installer LabVoix. Siri : app Raccourcis → « Ouvrir l’URL » de cette page, nommé « LabVoix ».', micErr: 'Erreur micro : ',
     copied: 'Journal copié.', copyPrompt: 'Copiez :', confirmClear: 'Effacer tout le journal ? Pensez à l\'exporter avant.',
     exProto: 'Protocole', exDate: 'Date',
     next: /^(suivant|suivante|étape suivante)\b/, prev: /^(précédent|précédente|retour)\b/, repeat: /^(répète|répéter|redis|encore)\b/,
@@ -122,7 +126,8 @@ const L = {
     zone: 'Tippen zum Sprechen', idle: 'Bildschirm (oder Headset-Taste) antippen, dann sprechen.', idleWake: 'Sagen Sie „Labor, …“ und dann den Befehl.',
     listening: 'Ich höre zu…', step: 'Schritt', of: '/', noted: 'Notiert.', timerOn: 'Timer gestartet.', timerEnd: 'Timer abgelaufen.',
     logStep: '▶ Beginn Schritt', logTimerOn: 'Timer gestartet', logTimerEnd: 'Timer abgelaufen', noSteps: '(keine Schritte)',
-    recLocal: 'Erkennung: lokal', recCloud: 'Erkennung: Cloud (Audio → Google)', recNone: 'Erkennung: nicht unterstützt', micErr: 'Mikrofonfehler: ',
+    recLocal: 'Erkennung: lokal', recCloud: 'Erkennung: Cloud (Audio → Google/Apple)', recNone: 'Erkennung: nicht unterstützt (iPhone: in Safari öffnen)',
+    iosHint: 'iPhone: Teilen ⬆ → „Zum Home-Bildschirm“, um LabVoix zu installieren. Siri: App Kurzbefehle → „URL öffnen“ mit dieser Seite, Name „LabVoix“.', micErr: 'Mikrofonfehler: ',
     copied: 'Journal kopiert.', copyPrompt: 'Kopieren:', confirmClear: 'Ganzes Journal löschen? Vorher exportieren.',
     exProto: 'Protokoll', exDate: 'Datum',
     next: /^(weiter|nächster|nächste|nächster schritt)\b/, prev: /^(zurück|vorheriger|vorherige)\b/, repeat: /^(wiederholen|wiederhole|nochmal|noch mal)\b/,
@@ -451,6 +456,9 @@ $('listenMode').value = store.get('listenMode', 'ptt');
 const savedProto = store.get('proto', null);
 if (savedProto) $('proto').value = savedProto;
 applyLang();
+// iPhone/iPad Safari has no install prompt: explain the manual way (iPadOS reports itself as Mac with touch).
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+$('iosHint').hidden = !(isIOS && !navigator.standalone);
 if (savedProto && store.get('running', false)) enterRun();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
