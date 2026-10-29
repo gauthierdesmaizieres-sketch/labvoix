@@ -1,10 +1,9 @@
 <!doctype html>
-<html lang="fr">
+<html lang="fr" data-theme="kobalt">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#f8fbfc" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#12303d" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#0d2f7a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Kobalt">
 <link rel="manifest" href="manifest.webmanifest">
@@ -547,7 +546,7 @@ function applyTheme(t) {
   for (const m of document.querySelectorAll('meta[name=theme-color]')) m.content = BAR[t];
 }
 $('theme').onchange = () => { store.set('theme', $('theme').value); applyTheme($('theme').value); };
-applyTheme(store.get('theme', 'glas'));
+applyTheme(store.get('theme', 'kobalt'));
 applyLang();
 // iPhone/iPad Safari has no install prompt: explain the manual way (iPadOS reports itself as Mac with touch).
 const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
