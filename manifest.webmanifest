@@ -1,6 +1,9 @@
 {
+  "id": "./",
   "name": "LabVoix",
   "short_name": "LabVoix",
+  "description": "Protocole de labo mains libres : lecture des étapes, notes dictées horodatées (FR/DE).",
+  "lang": "fr",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -8,6 +11,7 @@
   "theme_color": "#00aa66",
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
