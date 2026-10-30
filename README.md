@@ -33,6 +33,10 @@ Une page web installable (PWA) qui lit un protocole étape par étape et enregis
 
 Ouvrir à la voix : « Ok Google, ouvre Kobalt » / „Hey Google, öffne Kobalt“.
 
+## Android (APK)
+
+Si Chrome n'arrive pas à installer l'appli : télécharger `Kobalt.apk` dans les [Releases](https://github.com/gauthierdesmaizieres-sketch/labvoix/releases), l'ouvrir et autoriser l'installation. L'appli ouvre Kobalt dans Chrome et apparaît comme une appli normale pour Google Assistant et Bixby. Le code du lanceur est dans `android/`.
+
 ## iPhone
 
 1. Ouvrir le lien dans **Safari** → bouton Partager ⬆ → **Sur l'écran d'accueil**.
