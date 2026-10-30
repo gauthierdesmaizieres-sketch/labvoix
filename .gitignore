@@ -1,0 +1,8 @@
+# Fichiers privés : ne jamais publier la clé de signature
+*.keystore
+keystore-password.txt
+apk/
+labvoix/
+labvoix.zip
+rapport-voix-labo.md
+.claude/
