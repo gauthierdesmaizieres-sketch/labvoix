@@ -128,7 +128,7 @@
     <div class="row" style="justify-content:space-between;align-items:center">
       <h1 data-t="h1"></h1>
       <select id="theme" aria-label="Design"><option value="glas">Glas</option><option value="kobalt">Kobalt</option><option value="laborbuch">Laborbuch</option><option value="abzug">Abzug</option></select>
-      <select id="lang" aria-label="Langue / Sprache"><option value="fr">Français</option><option value="de">Deutsch</option></select>
+      <select id="lang" aria-label="Langue / Sprache"><option value="fr">Français</option><option value="de">Deutsch</option><option value="ch">Schweizerdeutsch</option></select>
     </div>
     <p class="hint" data-t="pasteHint"></p>
     <textarea id="proto"></textarea>
@@ -220,6 +220,19 @@ const L = {
   },
 };
 
+// Swiss German: Chrome's de-CH recogniser, dialect spellings of the commands, High German voice and UI.
+L.ch = { ...L.de,
+  speech: 'de-CH', tts: 'de-DE',
+  cmdHint: 'Befehle: „wiiter“, „zrugg“, „nomal“, „Notiz …“, „Timer 10 Minute“. Hochdeutsch geht auch. Jeder andere Satz wird als Notiz gespeichert. Aktivierungswort-Modus: mit „Kobalt, …“ beginnen.',
+  next: /^(weiter|wiiter|wyter|witer|nächst|nächscht|nächster|nächste)\b/,
+  prev: /^(zurück|zrugg|zrügg|zruck|vorher|vorheriger|vorherige)\b/,
+  repeat: /^(wiederholen|wiederhole|widerhole|widerhol|nomal|nomol|nomau|nochmal|noch mal)\b/,
+  timer: /^timer\s+(\d+|[a-zäöüß]+)\s*(sekunde|minute|minuute|stund)/,
+  note: /^(?:notiz|notier)\s*:?\s*(.+)/i,
+  units: { sekunde: 1, minute: 60, minuute: 60, stund: 3600 },
+  nums: { ...L.de.nums, eis:1, ei:1, zwöi:2, zwo:2, drü:3, füf:5, foif:5, sächs:6, sibe:7, nün:9, zäh:10, zäche:10, füfzäh:15, zwänzg:20, drissg:30 },
+};
+
 // --- Command parser (pure, self-checked below) ---
 // wake: when set, only phrases starting with that word are handled; the rest is ignored.
 function parse(text, lang, wake) {
@@ -260,6 +273,14 @@ console.assert(parse('il faut que je parte', 'fr', true).cmd === 'ignore');
 console.assert(parse('Kobalt, suivant', 'fr', true).cmd === 'next');
 console.assert(parse('cobalt note 62 °C', 'fr', true).text === '62 °C');
 console.assert(parse('Kobalt, weiter', 'de', true).cmd === 'next');
+console.assert(parse('wiiter', 'ch').cmd === 'next');
+console.assert(parse('Weiter', 'ch').cmd === 'next');
+console.assert(parse('zrugg', 'ch').cmd === 'prev');
+console.assert(parse('nomal', 'ch').cmd === 'repeat');
+console.assert(parse('Timer zäh Minute', 'ch').seconds === 600);
+console.assert(parse('Timer 2 Stunde', 'ch').seconds === 7200);
+console.assert(parse('Notiz Lösung hellgelb', 'ch').text === 'Lösung hellgelb');
+console.assert(parse('Kobalt, wiiter', 'ch', true).cmd === 'next');
 console.assert(parse('Kobaltblau ist schön', 'de', true).cmd === 'ignore');
 
 // --- Measured values in a note: "12,5 grammes" → masse "12,5 g" (FR and DE unit words) ---
@@ -274,7 +295,7 @@ const UNITS = [
   ['quantite', 'mol', 'mol|moles?'],
   ['quantite', 'éq', 'éq|eq|équivalents?|äquivalente?'],
   ['temperature', '°C', '°\\s?c|degrés?(?: celsius)?|grad(?: celsius)?'],
-  ['duree', 'h', 'h|heures?|stunden?'],
+  ['duree', 'h', 'h|heures?|stund(?:en?)?'],
   ['duree', 'min', 'min|minutes?|minuten'],
   ['duree', 's', 's|secondes?|sekunden?'],
   ['pression', 'mbar', 'mbar|millibars?'],
@@ -303,6 +324,7 @@ console.assert(extract('Lösung 62 Grad, 15 Minuten gerührt').duree === '15 min
 console.assert(extract('3 sorbonnes, 2 gants').masse === undefined);
 console.assert(extract('pH de 7,5').pH === '7,5');
 console.assert(extract('vide 20 mbar').pression === '20 mbar');
+console.assert(extract('2 Stund gerührt').duree === '2 h');
 
 // --- State (persisted so a reload or crash loses nothing) ---
 const $ = id => document.getElementById(id);
@@ -336,7 +358,7 @@ function loadProto() {
 function speak(text) {
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  u.lang = T('speech');
+  u.lang = T('tts') || T('speech');
   u.onend = () => { if (wantListening) startRec(); };
   stopRec(); // don't transcribe our own voice
   speechSynthesis.speak(u);
